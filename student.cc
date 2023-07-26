@@ -46,6 +46,7 @@ void insert_student(int stage, int _class, const char* first_name, const char* l
 void print_db();
 void display_menu();
 void admission_new_student();
+void top_ten_students_in_subject();
 
 //---------main section----------------
 int main()
@@ -159,7 +160,7 @@ void display_menu()
                 admission_new_student();
                 break;
             case 2:
-                //top_ten_students_in_subject();
+                top_ten_students_in_subject();
                 break;
             case 3:
                 //candidates_for_departure();
@@ -213,6 +214,65 @@ void admission_new_student()
 
     cout << "New student added successfully!" << endl;
 }
+
+//--------------------------------------------
+void top_ten_students_in_subject()
+{
+    int subject_index;
+    cout << "Enter the subject index (0 to " << NUM_OF_COURSES - 1 << "): ";
+    cin >> subject_index;
+
+    // Create an array to store students and their corresponding average in the subject
+    struct StudentWithAverage {
+        struct Student* student;
+        double average;
+    };
+
+    struct StudentWithAverage students_with_average[NUM_OF_LEVELS * NUM_OF_CLASSES];
+    int num_students_with_average = 0;
+
+    // Calculate the average score for each student in the given subject
+    for (int stage = 0; stage < NUM_OF_LEVELS; stage++)
+    {
+        for (int _class = 0; _class < NUM_OF_CLASSES; _class++)
+        {
+            struct Student* student = s.db[stage][_class];
+            if (student) {
+                int grade = atoi(student->courses[subject_index]); // Assuming the grades are stored as strings
+                if (grade >= 0) {
+                    students_with_average[num_students_with_average].student = student;
+                    students_with_average[num_students_with_average].average = grade;
+                    num_students_with_average++;
+                }
+            }
+        }
+    }
+
+    // Sort the students in descending order of average scores (using a simple selection sort)
+    for (int i = 0; i < num_students_with_average - 1; i++) {
+        int max_idx = i;
+        for (int j = i + 1; j < num_students_with_average; j++) {
+            if (students_with_average[j].average > students_with_average[max_idx].average) {
+                max_idx = j;
+            }
+        }
+        if (max_idx != i) {
+            struct StudentWithAverage temp = students_with_average[i];
+            students_with_average[i] = students_with_average[max_idx];
+            students_with_average[max_idx] = temp;
+        }
+    }
+
+    // Display the top ten students for the selected subject
+    cout << "Top ten students in Subject " << subject_index << ":" << endl;
+    for (int i = 0; i < num_students_with_average && i < 10; i++) {
+        struct StudentWithAverage student_with_average = students_with_average[i];
+        cout << "Name: " << student_with_average.student->first_name << " " << student_with_average.student->last_name;
+        cout << ", Average: " << student_with_average.average << endl;
+    }
+}
+
+
 
 
 
