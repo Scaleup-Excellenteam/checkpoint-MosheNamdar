@@ -38,19 +38,23 @@ struct School {
 };
 
 
-struct School s;
+static struct School s;
 
 //------prototypes------------------
 void init_db();
 void insert_student(int stage, int _class, const char* first_name, const char* last_name, int cell_number, int* grades);
 void print_db();
+void display_menu();
+void admission_new_student();
 
 //---------main section----------------
 int main()
 {
 	init_db();
 	
-	print_db();
+	display_menu();
+	
+	//print_db();
 	
 	return 0;
 }
@@ -58,7 +62,7 @@ int main()
 //---------functions-----------------------------
 void init_db()
 {
-	ifstream file("data.txt");
+	ifstream file("data1.txt");
     if (!file) {
         cerr << "Error opening the file." << endl;
         return;
@@ -134,6 +138,80 @@ void print_db()
             }
         }
     }
+}
+
+//-------------------------------------------
+void display_menu()
+{
+	int choice;
+    do {
+        cout << "---- Menu ----" << endl;
+        cout << "1. Admission of a new student" << endl;
+        cout << "2. Top ten students in each grade in a particular subject" << endl;
+        cout << "3. Students who are candidates for departure" << endl;
+        cout << "4. Calculation of average per course per layer" << endl;
+        cout << "5. Exit" << endl;
+        cout << "Enter your choice: ";
+        cin >> choice;
+
+        switch (choice) {
+            case 1:
+                admission_new_student();
+                break;
+            case 2:
+                //top_ten_students_in_subject();
+                break;
+            case 3:
+                //candidates_for_departure();
+                break;
+            case 4:
+                //calculate_average_per_course_per_layer();
+                break;
+            case 5:
+                cout << "Exiting the system. Goodbye!" << endl;
+                break;
+            default:
+                cout << "Invalid choice. Please try again." << endl;
+        }
+    } while (choice != 5);
+}
+
+//---------------------------------------------------
+void admission_new_student()
+{
+    // Gather information for the new student
+    char first_name[MAX_LEN];
+    char last_name[MAX_LEN];
+    int cell_number;
+    int stage;
+    int _class;
+    int grades[NUM_OF_COURSES];
+
+    cout << "Enter the first name of the new student: ";
+    cin.ignore(); // Ignore the newline character from the previous input
+    cin.getline(first_name, MAX_LEN);
+
+    cout << "Enter the last name of the new student: ";
+    cin.getline(last_name, MAX_LEN);
+
+    cout << "Enter the cell number of the new student: ";
+    cin >> cell_number;
+
+    cout << "Enter the stage of the new student: ";
+    cin >> stage;
+
+    cout << "Enter the class of the new student: ";
+    cin >> _class;
+
+    cout << "Enter the grades for " << NUM_OF_COURSES << " courses: ";
+    for (int i = 0; i < NUM_OF_COURSES; i++) {
+        cin >> grades[i];
+    }
+
+    // Insert the new student into the database
+    insert_student(stage, _class, first_name, last_name, cell_number, grades);
+
+    cout << "New student added successfully!" << endl;
 }
 
 
