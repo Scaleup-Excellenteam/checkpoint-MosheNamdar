@@ -1,19 +1,6 @@
-//-------include section----------
-#include <iostream>
-#include <fstream>
-#include <cstring>
-#include <cstdlib>
-#include <iomanip>
-#include <new>
-
-//--------using section------------
-using std::cout;
-using std::endl;
-using std::cin;
-using std::setw;
-using std::nothrow;
-using std::cerr;
-using std::ifstream;
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 #define LEN 30
 #define LENGTH 10
@@ -22,21 +9,18 @@ using std::ifstream;
 #define NUM_OF_CLASSES 10
 #define NUM_OF_COURSES 10
 
-
 //-------struct section-------------
 struct Student {
-	char first_name[MAX_LEN];
-	char last_name[MAX_LEN];
-	int cell_namber;
-	char* courses[NUM_OF_COURSES];
-	//int grades[NUM_OF_COURSES]
-	struct Student * _next;
+    char first_name[MAX_LEN];
+    char last_name[MAX_LEN];
+    int cell_namber;
+    char* courses[NUM_OF_COURSES];
+    struct Student* _next;
 };
 
 struct School {
-	struct Student* db[NUM_OF_LEVELS][NUM_OF_CLASSES];
+    struct Student* db[NUM_OF_LEVELS][NUM_OF_CLASSES];
 };
-
 
 static struct School s;
 
@@ -47,25 +31,26 @@ void print_db();
 void display_menu();
 void admission_new_student();
 void top_ten_students_in_subject();
-
+void delete_student();
+void edit_student();
+void search_student();
+void candidates_for_departure();
 //---------main section----------------
 int main()
 {
-	init_db();
-	
-	display_menu();
-	
-	//print_db();
-	
-	return 0;
+    init_db();
+    
+    display_menu();
+    
+    return 0;
 }
 
 //---------functions-----------------------------
 void init_db()
 {
-	ifstream file("data1.txt");
+    FILE* file = fopen("data1.txt", "r");
     if (!file) {
-        cerr << "Error opening the file." << endl;
+        fprintf(stderr, "Error opening the file.\n");
         return;
     }
 
@@ -76,24 +61,24 @@ void init_db()
     int _class;
     int grades[NUM_OF_COURSES];
 
-    while (file >> first_name >> last_name >> cell_number >> stage >> _class) {
+    while (fscanf(file, "%s %s %d %d %d", first_name, last_name, &cell_number, &stage, &_class) == 5) {
         for (int i = 0; i < NUM_OF_COURSES; i++) {
-            file >> grades[i];
+            fscanf(file, "%d", &grades[i]);
         }
 
         insert_student(stage, _class, first_name, last_name, cell_number, grades);
     }
 
-    file.close();
+    fclose(file);
 }
 
 //-----------------------------------------------
 void insert_student(int stage, int _class, const char* first_name, const char* last_name, int cell_number, int* grades)
 {
     // Create a new student struct
-    Student* new_student = new (nothrow) Student;
+    struct Student* new_student = (struct Student*)malloc(sizeof(struct Student));
     if (!new_student) {
-        cerr << "Memory allocation failed." << endl;
+        fprintf(stderr, "Memory allocation failed.\n");
         exit(EXIT_FAILURE);
     }
 
@@ -107,9 +92,9 @@ void insert_student(int stage, int _class, const char* first_name, const char* l
     new_student->cell_namber = cell_number;
 
     for (int i = 0; i < NUM_OF_COURSES; i++) {
-        new_student->courses[i] = new (nothrow) char[LENGTH];
+        new_student->courses[i] = (char*)malloc(LENGTH * sizeof(char));
         if (!new_student->courses[i]) {
-            cerr << "Memory allocation failed." << endl;
+            fprintf(stderr, "Memory allocation failed.\n");
             exit(EXIT_FAILURE);
         }
         snprintf(new_student->courses[i], LENGTH, "%d", grades[i]);
@@ -122,20 +107,18 @@ void insert_student(int stage, int _class, const char* first_name, const char* l
 //----------------------------------------
 void print_db()
 {
-	for (int stage = 0; stage < NUM_OF_LEVELS; stage++)
-	{
-        for (int _class = 0; _class < NUM_OF_CLASSES; _class++)
-        {
-            Student* student = s.db[stage][_class];
+    for (int stage = 0; stage < NUM_OF_LEVELS; stage++) {
+        for (int _class = 0; _class < NUM_OF_CLASSES; _class++) {
+            struct Student* student = s.db[stage][_class];
             if (student) {
-                cout << "Stage: " << stage + 1 << ", Class: " << _class + 1 << endl;
-                cout << "Name: " << student->first_name << " " << student->last_name << endl;
-                cout << "Cell Number: " << student->cell_namber << endl;
-                cout << "Courses: ";
+                printf("Stage: %d, Class: %d\n", stage + 1, _class + 1);
+                printf("Name: %s %s\n", student->first_name, student->last_name);
+                printf("Cell Number: %d\n", student->cell_namber);
+                printf("Courses: ");
                 for (int i = 0; i < NUM_OF_COURSES; i++) {
-                    cout << student->courses[i] << " ";
+                    printf("%s ", student->courses[i]);
                 }
-                cout << endl;
+                printf("\n");
             }
         }
     }
@@ -144,16 +127,19 @@ void print_db()
 //-------------------------------------------
 void display_menu()
 {
-	int choice;
+    int choice;
     do {
-        cout << "---- Menu ----" << endl;
-        cout << "1. Admission of a new student" << endl;
-        cout << "2. Top ten students in each grade in a particular subject" << endl;
-        cout << "3. Students who are candidates for departure" << endl;
-        cout << "4. Calculation of average per course per layer" << endl;
-        cout << "5. Exit" << endl;
-        cout << "Enter your choice: ";
-        cin >> choice;
+        printf("---- Menu ----\n");
+        printf("1. Admission of a new student\n");
+        printf("2. Top ten students in each grade in a particular subject\n");
+        printf("3. Students who are candidates for departure\n");
+        printf("4. Calculation of average per course per layer\n");
+        printf("5. Delete a student\n");
+        printf("6. Edit a student's information\n");
+        printf("7. Search for a student\n");
+        printf("8. Exit\n");
+        printf("Enter your choice: ");
+        scanf("%d", &choice);
 
         switch (choice) {
             case 1:
@@ -163,19 +149,31 @@ void display_menu()
                 top_ten_students_in_subject();
                 break;
             case 3:
-                //candidates_for_departure();
+                candidates_for_departure();
                 break;
             case 4:
                 //calculate_average_per_course_per_layer();
                 break;
             case 5:
-                cout << "Exiting the system. Goodbye!" << endl;
+                delete_student();
+                break;
+            case 6:
+                edit_student(); // Call the edit_student function for editing a student's information
+                break;
+            case 7:
+                search_student();
+                break;
+            case 8:
+                printf("Exiting the system. Goodbye!\n");
                 break;
             default:
-                cout << "Invalid choice. Please try again." << endl;
+                printf("Invalid choice. Please try again.\n");
         }
-    } while (choice != 5);
+    } while (choice != 8);
 }
+
+
+
 
 //---------------------------------------------------
 void admission_new_student()
@@ -188,39 +186,42 @@ void admission_new_student()
     int _class;
     int grades[NUM_OF_COURSES];
 
-    cout << "Enter the first name of the new student: ";
-    cin.ignore(); // Ignore the newline character from the previous input
-    cin.getline(first_name, MAX_LEN);
+    printf("Enter the first name of the new student: ");
+    getchar(); // Ignore the newline character from the previous input
+    fgets(first_name, MAX_LEN, stdin);
+    first_name[strcspn(first_name, "\n")] = '\0'; // Remove the newline character
 
-    cout << "Enter the last name of the new student: ";
-    cin.getline(last_name, MAX_LEN);
+    printf("Enter the last name of the new student: ");
+    fgets(last_name, MAX_LEN, stdin);
+    last_name[strcspn(last_name, "\n")] = '\0'; // Remove the newline character
 
-    cout << "Enter the cell number of the new student: ";
-    cin >> cell_number;
+    printf("Enter the cell number of the new student: ");
+    scanf("%d", &cell_number);
 
-    cout << "Enter the stage of the new student: ";
-    cin >> stage;
+    printf("Enter the stage of the new student: ");
+    scanf("%d", &stage);
 
-    cout << "Enter the class of the new student: ";
-    cin >> _class;
+    printf("Enter the class of the new student: ");
+    scanf("%d", &_class);
 
-    cout << "Enter the grades for " << NUM_OF_COURSES << " courses: ";
+    printf("Enter the grades for %d courses: ", NUM_OF_COURSES);
     for (int i = 0; i < NUM_OF_COURSES; i++) {
-        cin >> grades[i];
+        scanf("%d", &grades[i]);
     }
 
     // Insert the new student into the database
     insert_student(stage, _class, first_name, last_name, cell_number, grades);
 
-    cout << "New student added successfully!" << endl;
+
+    printf("New student added successfully!\n");
 }
 
 //--------------------------------------------
 void top_ten_students_in_subject()
 {
     int subject_index;
-    cout << "Enter the subject index (0 to " << NUM_OF_COURSES - 1 << "): ";
-    cin >> subject_index;
+    printf("Enter the subject index (0 to %d): ", NUM_OF_COURSES - 1);
+    scanf("%d", &subject_index);
 
     // Create an array to store students and their corresponding average in the subject
     struct StudentWithAverage {
@@ -232,10 +233,8 @@ void top_ten_students_in_subject()
     int num_students_with_average = 0;
 
     // Calculate the average score for each student in the given subject
-    for (int stage = 0; stage < NUM_OF_LEVELS; stage++)
-    {
-        for (int _class = 0; _class < NUM_OF_CLASSES; _class++)
-        {
+    for (int stage = 0; stage < NUM_OF_LEVELS; stage++) {
+        for (int _class = 0; _class < NUM_OF_CLASSES; _class++) {
             struct Student* student = s.db[stage][_class];
             if (student) {
                 int grade = atoi(student->courses[subject_index]); // Assuming the grades are stored as strings
@@ -264,17 +263,221 @@ void top_ten_students_in_subject()
     }
 
     // Display the top ten students for the selected subject
-    cout << "Top ten students in Subject " << subject_index << ":" << endl;
+    printf("Top ten students in Subject %d:\n", subject_index);
     for (int i = 0; i < num_students_with_average && i < 10; i++) {
         struct StudentWithAverage student_with_average = students_with_average[i];
-        cout << "Name: " << student_with_average.student->first_name << " " << student_with_average.student->last_name;
-        cout << ", Average: " << student_with_average.average << endl;
+        printf("Name: %s %s, Average: %.2f\n", student_with_average.student->first_name, student_with_average.student->last_name, student_with_average.average);
     }
 }
 
+//-------------------------------------------
+void delete_student()
+{
+    int stage, _class;
+    char first_name[MAX_LEN], last_name[MAX_LEN];
 
+    printf("Enter the stage of the student you want to delete: ");
+    scanf("%d", &stage);
 
+    printf("Enter the class of the student you want to delete: ");
+    scanf("%d", &_class);
 
+    printf("Enter the first name of the student you want to delete: ");
+    getchar(); // Ignore the newline character from the previous input
+    fgets(first_name, MAX_LEN, stdin);
+    first_name[strcspn(first_name, "\n")] = '\0'; // Remove the newline character
 
+    printf("Enter the last name of the student you want to delete: ");
+    fgets(last_name, MAX_LEN, stdin);
+    last_name[strcspn(last_name, "\n")] = '\0'; // Remove the newline character
+
+    // Find the student in the database and delete it
+    Student* student = s.db[stage - 1][_class - 1];
+    if (student) {
+        if (strcmp(student->first_name, first_name) == 0 && strcmp(student->last_name, last_name) == 0) {
+            // Found the student, now delete it
+            for (int i = 0; i < NUM_OF_COURSES; i++) {
+                free(student->courses[i]);
+            }
+            s.db[stage - 1][_class - 1] = nullptr;
+
+            printf("Student deleted successfully!\n");
+            return;
+        }
+    }
+
+    printf("Student not found in the database.\n");
+}
+
+//------------------------------------------
+void edit_student()
+{
+    int stage, _class;
+    char first_name[MAX_LEN], last_name[MAX_LEN];
+    int phone_number;
+    int choice;
+
+    printf("Enter the stage of the student you want to edit: ");
+    scanf("%d", &stage);
+
+    printf("Enter the class of the student you want to edit: ");
+    scanf("%d", &_class);
+
+    printf("Enter the first name of the student you want to edit: ");
+    getchar(); // Ignore the newline character from the previous input
+    fgets(first_name, MAX_LEN, stdin);
+    first_name[strcspn(first_name, "\n")] = '\0'; // Remove the newline character
+
+    printf("Enter the last name of the student you want to edit: ");
+    fgets(last_name, MAX_LEN, stdin);
+    last_name[strcspn(last_name, "\n")] = '\0'; // Remove the newline character
+
+    // Find the student in the database
+    struct Student* student = s.db[stage - 1][_class - 1];
+    if (student) {
+        if (strcmp(student->first_name, first_name) == 0 && strcmp(student->last_name, last_name) == 0) {
+            // Found the student, now let the user choose what information to edit
+            printf("Student found:\n");
+            printf("Name: %s %s\n", student->first_name, student->last_name);
+            printf("Cell Number: %d\n", student->cell_namber);
+            printf("Courses: ");
+            for (int i = 0; i < NUM_OF_COURSES; i++) {
+                printf("%s ", student->courses[i]);
+            }
+            printf("\n");
+
+            printf("What information do you want to edit?\n");
+            printf("1. First Name\n");
+            printf("2. Last Name\n");
+            printf("3. Cell Number\n");
+            printf("4. Courses\n");
+            printf("Enter your choice: ");
+            scanf("%d", &choice);
+
+            switch (choice) {
+                case 1:
+                    printf("Enter the new First Name: ");
+                    getchar();
+                    fgets(first_name, MAX_LEN, stdin);
+                    first_name[strcspn(first_name, "\n")] = '\0';
+                    strncpy(student->first_name, first_name, MAX_LEN - 1);
+                    student->first_name[MAX_LEN - 1] = '\0';
+                    break;
+                case 2:
+                    printf("Enter the new Last Name: ");
+                    getchar();
+                    fgets(last_name, MAX_LEN, stdin);
+                    last_name[strcspn(last_name, "\n")] = '\0';
+                    strncpy(student->last_name, last_name, MAX_LEN - 1);
+                    student->last_name[MAX_LEN - 1] = '\0';
+                    break;
+                case 3:
+                    printf("Enter the new phone number: ");
+                    scanf("%d", &phone_number);
+                    student->cell_namber = phone_number;
+                    printf("Phone number updated successfully!\n");
+                    break;
+                case 4:
+                    printf("Enter the course index (0 to %d) you want to update the grade: ", NUM_OF_COURSES - 1);
+                    int course_index;
+                    scanf("%d", &course_index);
+                    if (course_index >= 0 && course_index < NUM_OF_COURSES) {
+                        printf("Enter the new grade for the course: ");
+                        scanf("%s", student->courses[course_index]);
+                    } else {
+                        printf("Invalid course index.\n");
+                    }
+                    break;
+                default:
+                    printf("Invalid choice.\n");
+            }
+
+            printf("Student information updated successfully!\n");
+            return;
+        }
+    }
+
+    printf("Student not found in the database.\n");
+}
+
+//----------------------------------------------
+void search_student()
+{
+    char first_name[MAX_LEN], last_name[MAX_LEN];
+
+    printf("Enter the first name of the student you want to search: ");
+    getchar(); // Ignore the newline character from the previous input
+    fgets(first_name, MAX_LEN, stdin);
+    first_name[strcspn(first_name, "\n")] = '\0'; // Remove the newline character
+
+    printf("Enter the last name of the student you want to search: ");
+    fgets(last_name, MAX_LEN, stdin);
+    last_name[strcspn(last_name, "\n")] = '\0'; // Remove the newline character
+
+    // Find the student in the database
+    for (int stage = 0; stage < NUM_OF_LEVELS; stage++) {
+        for (int _class = 0; _class < NUM_OF_CLASSES; _class++) {
+            struct Student* student = s.db[stage][_class];
+            if (student) {
+                if (strcmp(student->first_name, first_name) == 0 && strcmp(student->last_name, last_name) == 0) {
+                    // Found the student, display all the information
+                    printf("Student found:\n");
+                    printf("Stage: %d, Class: %d\n", stage + 1, _class + 1);
+                    printf("Name: %s %s\n", student->first_name, student->last_name);
+                    printf("Cell Number: %d\n", student->cell_namber);
+                    printf("Courses: ");
+                    for (int i = 0; i < NUM_OF_COURSES; i++) {
+                        printf("%s ", student->courses[i]);
+                    }
+                    printf("\n");
+                    return;
+                }
+            }
+        }
+    }
+
+    printf("Student not found in the database.\n");
+}
+
+//-----------------------------------------
+void candidates_for_departure()
+{
+    // Create an array to store students and their corresponding average grades
+    struct StudentWithAverage {
+        struct Student* student;
+        double average;
+    };
+
+    struct StudentWithAverage students_with_average[NUM_OF_LEVELS * NUM_OF_CLASSES];
+    int num_students_with_average = 0;
+
+    // Calculate the average score for each student
+    for (int stage = 0; stage < NUM_OF_LEVELS; stage++) {
+        for (int _class = 0; _class < NUM_OF_CLASSES; _class++) {
+            struct Student* student = s.db[stage][_class];
+            if (student) {
+                // Calculate the average grade for the student
+                double total = 0.0;
+                for (int i = 0; i < NUM_OF_COURSES; i++) {
+                    total += atof(student->courses[i]);
+                }
+                double average = total / NUM_OF_COURSES;
+
+                students_with_average[num_students_with_average].student = student;
+                students_with_average[num_students_with_average].average = average;
+                num_students_with_average++;
+            }
+        }
+    }
+
+    // Display the students with average grade below 55 as candidates for departure
+    printf("Candidates for Departure (Average Grade Below 55):\n");
+    for (int i = 0; i < num_students_with_average; i++) {
+        struct StudentWithAverage student_with_average = students_with_average[i];
+        if (student_with_average.average < 55.0) {
+            printf("Name: %s %s, Average: %.2f\n", student_with_average.student->first_name, student_with_average.student->last_name, student_with_average.average);
+        }
+    }
+}
 
 
