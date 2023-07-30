@@ -35,6 +35,9 @@ void delete_student();
 void edit_student();
 void search_student();
 void candidates_for_departure();
+void calculate_average_per_course_per_level();
+void export_db_to_file(const char* filename);
+
 //---------main section----------------
 int main()
 {
@@ -137,7 +140,8 @@ void display_menu()
         printf("5. Delete a student\n");
         printf("6. Edit a student's information\n");
         printf("7. Search for a student\n");
-        printf("8. Exit\n");
+        printf("8. Export the database to a file\n"); // Option added for exporting the database
+        printf("9. Exit\n");
         printf("Enter your choice: ");
         scanf("%d", &choice);
 
@@ -152,7 +156,7 @@ void display_menu()
                 candidates_for_departure();
                 break;
             case 4:
-                //calculate_average_per_course_per_layer();
+                calculate_average_per_course_per_level();
                 break;
             case 5:
                 delete_student();
@@ -164,16 +168,19 @@ void display_menu()
                 search_student();
                 break;
             case 8:
+                char filename[MAX_LEN];
+                printf("Enter the filename to export the database: ");
+                scanf("%s", filename);
+                export_db_to_file(filename);
+                break;
+            case 9:
                 printf("Exiting the system. Goodbye!\n");
                 break;
             default:
                 printf("Invalid choice. Please try again.\n");
         }
-    } while (choice != 8);
+    } while (choice != 9);
 }
-
-
-
 
 //---------------------------------------------------
 void admission_new_student()
@@ -480,4 +487,62 @@ void candidates_for_departure()
     }
 }
 
+//-------------------------------------------------
+void calculate_average_per_course_per_level()
+{
+    // Create arrays to store the total grades and the number of students for each course in each layer
+    int total_grades[NUM_OF_LEVELS][NUM_OF_COURSES] = {0};
+    int num_students[NUM_OF_LEVELS][NUM_OF_COURSES] = {0};
+
+    // Calculate the total grades and the number of students for each course in each layer
+    for (int stage = 0; stage < NUM_OF_LEVELS; stage++) {
+        for (int _class = 0; _class < NUM_OF_CLASSES; _class++) {
+            struct Student* student = s.db[stage][_class];
+            if (student) {
+                for (int i = 0; i < NUM_OF_COURSES; i++) {
+                    total_grades[stage][i] += atoi(student->courses[i]);
+                    num_students[stage][i]++;
+                }
+            }
+        }
+    }
+
+    // Display the average grade for each course in each layer
+    printf("Average Grade per Course per Layer:\n");
+    for (int stage = 0; stage < NUM_OF_LEVELS; stage++) {
+        printf("Layer: %d\n", stage + 1);
+        for (int i = 0; i < NUM_OF_COURSES; i++) {
+            double average = (double)total_grades[stage][i] / num_students[stage][i];
+            printf("Course %d: %.2f\n", i + 1, average);
+        }
+    }
+}
+
+//------------------------------------------
+void export_db_to_file(const char* filename)
+{
+    FILE* file = fopen(filename, "w");
+    if (!file) {
+        fprintf(stderr, "Error opening the file.\n");
+        return;
+    }
+
+    for (int stage = 0; stage < NUM_OF_LEVELS; stage++) {
+        for (int _class = 0; _class < NUM_OF_CLASSES; _class++) {
+            struct Student* student = s.db[stage][_class];
+            if (student) {
+                fprintf(file, "%s %s %d %d %d", student->first_name, student->last_name, student->cell_namber, stage + 1, _class + 1);
+                for (int i = 0; i < NUM_OF_COURSES; i++) {
+                    fprintf(file, " %s", student->courses[i]);
+                }
+                fprintf(file, "\n");
+            }
+        }
+    }
+
+    fclose(file);
+    printf("Database exported to '%s' successfully!\n", filename);
+}
+
+//----------------------------------------------
 
